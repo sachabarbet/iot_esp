@@ -1,57 +1,19 @@
-#include <WiFi.h>
-#include <PubSubClient.h>
+#include <Arduino.h>
+#include "Detector.h"
 
-const char* ssid = "ssid";
-const char* password = "pass";
-const char* mqtt_server = "serv";
-const char* mqtt_user = "user";
-const char* mqtt_password = "pass";
+const int TRIG_PIN = 5;
+const int ECHO_PIN = 18;
 
-WiFiClient espClient;
-PubSubClient client(espClient);
-
-void setup_wifi() {
-    WiFi.begin(ssid, password);
-    while (!WiFi.isConnected()) {
-        delay(500);
-        Serial.print(".");
-    }
-    Serial.println("WiFi connected");
-}
-
-void mqttCallback(char* topic, byte* message, unsigned int length) {
-    Serial.print("Message received on topic: ");
-    Serial.println(topic);
-    
-    Serial.print("Message: ");
-    for (int i = 0; i < length; i++) {
-        Serial.print((char)message[i]); // Convert byte to char
-    }
-    Serial.println();
-}
-
-void reconnect() {
-    while (!client.connected()) {
-        if (client.connect("SB_ESP-CLIENT", mqtt_user, mqtt_password)) {
-            Serial.println("MQTT Connected");
-            client.subscribe("test/topic");
-            client.setCallback(mqttCallback);
-            client.publish("test/topic", "Hello from ESP32");
-        } else {
-            delay(5000);
-        }
-    }
-}
+Detector detector(TRIG_PIN, ECHO_PIN);
 
 void setup() {
     Serial.begin(9600);
-    setup_wifi();
-    client.setServer(mqtt_server, 1883);
+    detector.begin();
 }
 
 void loop() {
-    if (!client.connected()) {
-        reconnect();
-    }
-    client.loop();
+    float distance = detector.getDistance();
+    Serial.print("Distance (cm): ");
+    Serial.println(distance);
+    delay(1000);
 }
