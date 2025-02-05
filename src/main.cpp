@@ -1,4 +1,5 @@
-#include <WiFi.h>
+#include <WiFiClientSecure.h>
+#include <LittleFS.h>
 #include <PubSubClient.h>
 
 const char* ssid = "ssid";
@@ -7,8 +8,31 @@ const char* mqtt_server = "serv";
 const char* mqtt_user = "user";
 const char* mqtt_password = "pass";
 
-WiFiClient espClient;
+WiFiClientSecure espClient;
 PubSubClient client(espClient);
+
+void loadCertificate() {
+    File cert = LittleFS.open("/mosquitto.der", "r");  // Use SPIFFS.open() if using SPIFFS
+    if (!cert) {
+        Serial.println("Failed to open cert file");
+        return;
+    }
+
+    size_t size = cert.size();
+    char* certData = (char*)malloc(size + 1);
+    if (!certData) {
+        Serial.println("Memory allocation failed");
+        return;
+    }
+
+    cert.readBytes(certData, size);
+    certData[size] = '\0';  // Null-terminate the buffer
+
+    espClient.setCACert(certData);  // Pass it as a C-string
+
+    free(certData);
+    cert.close();
+}
 
 void setup_wifi() {
     WiFi.begin(ssid, password);
@@ -46,6 +70,7 @@ void reconnect() {
 void setup() {
     Serial.begin(9600);
     setup_wifi();
+    loadCertificate();
     client.setServer(mqtt_server, 1883);
 }
 
