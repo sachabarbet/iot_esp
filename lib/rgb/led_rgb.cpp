@@ -1,6 +1,6 @@
 #include "led_rgb.h"
 
-// Création d'une instance de la LED avec un seuil de 1000 cycles
+// Création d'une instance de la LED avec un seuil de 500 cycles
 Led::Led(unsigned long threshold) : timer(threshold) {
     state = LED_OFF;
 }
@@ -20,25 +20,32 @@ void setRgbLedColor(int red, int green, int blue) {
     analogWrite(BLUE_PIN, blue);
 }
 
-// Fonction pour changer l'état de la LED avec un Timer
-void setLedState(Led &led, LedState newState, unsigned long threshold) {
+// Fonction pour changer l'état de la LED
+void setLedState(Led &led, LedState newState) {
     led.state = newState;
-    led.timer.reset();
 }
 
-// Fonction pour mettre à jour l'état de la LED en fonction du compteur
+// Fonction pour mettre à jour l'état de la LED en fonction de la luminosité
 void updateLed(Led &led) {
-    led.timer.increment();  // Incrémente le compteur à chaque cycle
+    led.timer.increment();  // Incrémente le compteur
 
-    if (led.timer.isExpired()) {  // Vérifie si le seuil est atteint
-        switch (led.state) {
-            case LED_OFF:
-                setRgbLedColor(0, 0, 0);  // Éteindre la LED
-                break;
-            case LED_ON:
-                setRgbLedColor(255, 0, 0);  // Allumer en rouge
-                break;
+    if (led.timer.isExpired()) {  // Vérifie si le seuil du Timer est atteint
+        uint16_t lux = readBH1750();  // Lecture de la luminosité
+        Serial.print("Luminosité : ");
+        Serial.print(lux);
+        Serial.println(" lux");
+
+        if (lux >= LIGHT_THRESHOLD) {
+            setLedState(led, LED_ON);
+        } else {
+            setLedState(led, LED_OFF);
         }
-        led.timer.reset();  // Réinitialise le compteur pour le prochain cycle
+
+        // Appliquer l’état de la LED
+        if (led.state == LED_ON) {
+            setRgbLedColor(255, 0, 0);  // Rouge si allumé
+        } else {
+            setRgbLedColor(0, 0, 0);  // Éteint
+        }
     }
 }

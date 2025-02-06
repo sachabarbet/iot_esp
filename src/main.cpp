@@ -1,17 +1,17 @@
 #include <Arduino.h>
+#include "led_rgb.h"
 #include "i2c_bitbang.h"
+
+Led myLed(500); // LED mise à jour toutes les 500 cycles
 
 void setup() {
     Serial.begin(115200);
     i2c_init();
-    Serial.println("Test du capteur BH1750 avec I2C manuel");
+    led_init();
+    
+    Serial.println("Gestion automatique de la LED en fonction de la luminosité");
 }
 
 void loop() {
-    uint16_t lux = readBH1750();
-    Serial.print("Luminosité : ");
-    Serial.print(lux);
-    Serial.println(" lux");
-
-    delay(1000);
+    updateLed(myLed);  // Met à jour l'état de la LED en fonction de la luminosité
 }
