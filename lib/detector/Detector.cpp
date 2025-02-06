@@ -7,9 +7,9 @@ void Detector::begin() {
     pinMode(echoPin, INPUT);
 }
 
-float Detector::getDistance() {
+int Detector::getDistance() {
     long duration;
-    float distance_cm;
+    int distance_cm;
 
     // Génération de l'impulsion ultrasonique
     digitalWrite(trigPin, LOW);
@@ -22,7 +22,7 @@ float Detector::getDistance() {
     duration = pulseIn(echoPin, HIGH);
 
     // Calcul de la distance en cm
-    distance_cm = duration * SOUND_SPEED / 2 * 0.0001; 
+    distance_cm = duration * (SOUND_SPEED* 0.00005); 
 
     return distance_cm;
 }

@@ -12,7 +12,7 @@ void setup() {
 }
 
 void loop() {
-    float distance = detector.getDistance();
+    int distance = detector.getDistance();
     Serial.print("Distance (cm): ");
     Serial.println(distance);
     delay(1000);
