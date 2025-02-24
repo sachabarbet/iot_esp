@@ -24,28 +24,3 @@ void setRgbLedColor(int red, int green, int blue) {
 void setLedState(Led &led, LedState newState) {
     led.state = newState;
 }
-
-// Fonction pour mettre à jour l'état de la LED en fonction de la luminosité
-void updateLed(Led &led) {
-    led.timer.increment();  // Incrémente le compteur
-
-    if (led.timer.isExpired()) {  // Vérifie si le seuil du Timer est atteint
-        uint16_t lux = readBH1750();  // Lecture de la luminosité
-        Serial.print("Luminosité : ");
-        Serial.print(lux);
-        Serial.println(" lux");
-
-        if (lux >= LIGHT_THRESHOLD) {
-            setLedState(led, LED_ON);
-        } else {
-            setLedState(led, LED_OFF);
-        }
-
-        // Appliquer l’état de la LED
-        if (led.state == LED_ON) {
-            setRgbLedColor(255, 0, 0);  // Rouge si allumé
-        } else {
-            setRgbLedColor(0, 0, 0);  // Éteint
-        }
-    }
-}

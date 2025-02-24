@@ -15,6 +15,11 @@ public:
     bool isExpired();  // Vérifie si le seuil est atteint
     void reset();  // Réinitialise le compteur
     void increment();  // Incrémente le compteur
+
+
+    // Getters pour récupérer les valeurs du Timer
+    unsigned long getCounter() const;   // Récupère la valeur du compteur
+    unsigned long getThreshold() const; // Récupère le seuil de mise à jour
 };
 
 #endif

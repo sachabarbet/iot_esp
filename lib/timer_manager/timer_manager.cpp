@@ -24,3 +24,13 @@ void Timer::reset() {
 void Timer::increment() {
     counter++;
 }
+
+// Récupère la valeur du compteur
+unsigned long Timer::getCounter() const {
+    return counter;
+}
+
+// Récupère la valeur du seuil de mise à jour
+unsigned long Timer::getThreshold() const {
+    return threshold;
+}

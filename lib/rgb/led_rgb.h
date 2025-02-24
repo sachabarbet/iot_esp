@@ -30,7 +30,6 @@ struct Led {
 // Déclarations des fonctions
 void led_init();
 void setRgbLedColor(int red, int green, int blue);
-void updateLed(Led &led);
 void setLedState(Led &led, LedState newState);
 
 #endif
