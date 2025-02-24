@@ -87,8 +87,8 @@ void publierDonnees() {
   
   float lux = capteurOk ? capteurLumiere.readLightLevel() : -1;
   String message = "{\"position\":" + String(positionPct) + 
-                  ",\"mode\":" + String(modeActuel) + 
-                  ",\"luminosite\":" + String(lux) + "}";
+                  ",\"espMode\":" + String(modeActuel) + 
+                  ",\"luxValue\":" + String(lux) + "}";
   
   mqttClient.publish(topic_data, message.c_str());
   Serial.println("Données publiées: " + message);
@@ -212,9 +212,6 @@ bool connectMQTT() {
       // Souscription aux topics
       mqttClient.subscribe(topic_control);
       mqttClient.subscribe(topic_mode);
-      
-      // Message de connexion (uniquement à la connexion)
-      mqttClient.publish(topic_data, "{\"status\":\"connected\"}");
       
       mqttConnecte = true;
       return true;
