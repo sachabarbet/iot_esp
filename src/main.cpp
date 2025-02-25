@@ -31,12 +31,13 @@ uint16_t lux = 0;
 int distance = -1;
 String led_state = "OFF";
 String detector_state = "IDLE";
+bool led_debounce = false;
 String rgb_values = "0,0,0";
 String mode = "0";  // Par défaut, on est en mode automatique
 
 // Timers pour éviter les delays bloquants
-Timer reconnectTimer(8000);   // Vérification MQTT toutes les 5 secondes
-Timer mqttSendTimer(100);    // Envoi des données MQTT toutes les 2 secondes
+Timer reconnectTimer(10);   // Vérification MQTT toutes les 5 secondes
+Timer mqttSendTimer(45);    // Envoi des données MQTT toutes les 10 secondes
 
 // 🧵 Multi-threading (ESP32 FreeRTOS)
 TaskHandle_t MQTTTaskHandle;
@@ -105,7 +106,6 @@ void reconnect() {
 
 void sendMQTTData() {
     mqttSendTimer.increment();  // 🔥 Assure que le Timer est incrémenté à chaque loop
-    Serial.println(mqttSendTimer.getCounter());  
     if (mqttSendTimer.isExpired()) {  // 🔥 Envoi des données seulement toutes les 5 secondes
         // Vérification si MQTT est bien connecté avant d'envoyer
         if (client.connected()) {
@@ -124,24 +124,21 @@ void sendMQTTData() {
             payload += "\"luxTriggerOn\":0,";
             payload += "\"luxTriggerOff\":" + String(LIGHT_THRESHOLD) + ",";
             payload += "\"distance\":" + String(distance) + ",";
-            payload += "\"detector_state\":\"" + detector_state + "\"";
+            payload += "\"detectorState\":\"" + detector_state + "\"";
             payload += "}";
 
-            Serial.println("test2");
-
             // 📡 Publication sur MQTT
-            bool success = client.publish("esp-led/data", payload.c_str());
+            bool success = client.publish("esp-led/data", payload.c_str(), true);
             if (success) {
-                Serial.println("📡 MQTT Publish Success (Toutes les 5s) : " + payload);
+                Serial.println("📡 MQTT Publish Success (Toutes les 10s~) : " + payload);
             } else {
                 Serial.println("❌ MQTT Publish Failed !");
             }
 
-            mqttSendTimer.reset();  // 🔄 Réinitialisation du Timer
+            mqttSendTimer.reset();  // 🔄 Reinitialization du Timer
         }
     }
 }
-
 
 // 🔄 Mise à jour de la LED en mode AUTO
 void updateLedAuto(Led &led, Detector &detector) {
@@ -155,16 +152,25 @@ void updateLedAuto(Led &led, Detector &detector) {
    //  Serial.print(distance);
    //  Serial.println(" cm");
 
-    if (lux < LIGHT_THRESHOLD || (distance > 0 && distance < DISTANCE_TRIGGER)) {
-        setLedState(led, LED_ON);
-        led_state = "ON";
-        setRgbLedColor(255, 0, 0);
-        rgb_values = "255,0,0";
+    if (lux < LIGHT_THRESHOLD && (distance > 0 && distance < DISTANCE_TRIGGER)) {
+        if (!led_debounce) {
+            led_debounce = true;
+        } else {
+            setLedState(led, LED_ON);
+            led_state = "ON";
+            setRgbLedColor(255, 255, 255);
+            rgb_values = "255,255,255";
+            led_debounce = false;
+        }
     } else {
-        setLedState(led, LED_OFF);
-        led_state = "OFF";
-        setRgbLedColor(0, 0, 0);
-        rgb_values = "0,0,0";
+        if (led_debounce) {
+            led_debounce = false;
+        } else if (led_state == "ON") {
+            setLedState(led, LED_OFF);
+            led_state = "OFF";
+            setRgbLedColor(0, 0, 0);
+            rgb_values = "0,0,0";
+        }
     }
 
     detector_state = (detector.getState() == Detector::SENDING) ? "SENDING" :
